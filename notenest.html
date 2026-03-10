@@ -1,0 +1,360 @@
+```html
+<!DOCTYPE html>
+<html>
+<head>
+<title>NoteNest - Advanced Notes Manager</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f4f4f4;
+transition:0.3s;
+}
+
+.dark{
+background:#1e1e1e;
+color:white;
+}
+
+header{
+background:#4a6cf7;
+color:white;
+padding:15px;
+text-align:center;
+}
+
+nav{
+background:#333;
+text-align:center;
+padding:10px;
+}
+
+nav button{
+background:#4a6cf7;
+color:white;
+border:none;
+padding:10px 15px;
+margin:5px;
+cursor:pointer;
+}
+
+.section{
+display:none;
+padding:20px;
+}
+
+input,textarea{
+width:100%;
+padding:10px;
+margin:10px 0;
+}
+
+.note{
+padding:15px;
+margin:10px 0;
+border-radius:6px;
+color:#000;
+}
+
+.feature-buttons button{
+margin:10px;
+padding:12px 18px;
+background:#4a6cf7;
+color:white;
+border:none;
+cursor:pointer;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+<h1>NoteNest Notes Management System</h1>
+</header>
+
+<nav>
+
+<button onclick="showSection('login')">Login</button>
+<button onclick="showSection('register')">Register</button>
+<button onclick="showSection('dashboard')">Dashboard</button>
+<button onclick="showSection('features')">Features</button>
+<button onclick="toggleDark()">Dark Mode</button>
+<button onclick="logout()">Logout</button>
+
+</nav>
+
+<!-- LOGIN -->
+
+<div id="login" class="section">
+
+<h2>Login</h2>
+
+<input type="text" id="loginUser" placeholder="Username">
+
+<input type="password" id="loginPass" placeholder="Password">
+
+<button onclick="login()">Login</button>
+
+</div>
+
+<!-- REGISTER -->
+
+<div id="register" class="section">
+
+<h2>Register</h2>
+
+<input type="text" id="regUser" placeholder="Username">
+
+<input type="password" id="regPass" placeholder="Password">
+
+<button onclick="register()">Register</button>
+
+</div>
+
+<!-- DASHBOARD -->
+
+<div id="dashboard" class="section">
+
+<h2>Dashboard</h2>
+
+<input type="text" id="search" placeholder="Search notes" onkeyup="searchNotes()">
+
+<h3>Create Note</h3>
+
+<input type="text" id="title" placeholder="Title">
+
+<textarea id="content" placeholder="Write note"></textarea>
+
+<select id="color">
+<option value="#ffffff">White</option>
+<option value="#ffd6d6">Red</option>
+<option value="#d6ffd9">Green</option>
+<option value="#d6e0ff">Blue</option>
+<option value="#fff5ba">Yellow</option>
+</select>
+
+<button onclick="addNote()">Add Note</button>
+
+<div id="notes"></div>
+
+</div>
+
+<!-- FEATURES -->
+
+<div id="features" class="section">
+
+<h2>Features</h2>
+
+<div class="feature-buttons">
+
+<button onclick="showSection('dashboard')">Add Notes</button>
+<button onclick="showSection('dashboard')">Edit Notes</button>
+<button onclick="showSection('dashboard')">Delete Notes</button>
+<button onclick="showSection('dashboard')">Search Notes</button>
+<button onclick="showSection('dashboard')">Date & Time</button>
+<button onclick="showSection('dashboard')">Local Storage</button>
+
+</div>
+
+</div>
+
+<script>
+
+let notes = JSON.parse(localStorage.getItem("notes")) || [];
+let editIndex=-1;
+
+function showSection(id){
+
+document.querySelectorAll(".section").forEach(sec=>sec.style.display="none");
+
+document.getElementById(id).style.display="block";
+
+}
+
+showSection("login");
+
+function register(){
+
+let user=document.getElementById("regUser").value;
+let pass=document.getElementById("regPass").value;
+
+if(user==""||pass==""){
+alert("Fill all fields");
+return;
+}
+
+localStorage.setItem("user_"+user,pass);
+
+alert("Registration successful");
+
+showSection("login");
+
+}
+
+function login(){
+
+let user=document.getElementById("loginUser").value;
+let pass=document.getElementById("loginPass").value;
+
+let stored=localStorage.getItem("user_"+user);
+
+if(stored===pass){
+
+alert("Login successful");
+
+showSection("dashboard");
+
+displayNotes();
+
+}else{
+
+alert("Invalid login");
+
+}
+
+}
+
+function logout(){
+
+showSection("login");
+
+}
+
+function addNote(){
+
+let title=document.getElementById("title").value;
+let content=document.getElementById("content").value;
+let color=document.getElementById("color").value;
+
+if(title==""||content==""){
+alert("Write something");
+return;
+}
+
+let date=new Date().toLocaleString();
+
+if(editIndex==-1){
+
+notes.push({title,content,date,color});
+
+}else{
+
+notes[editIndex]={title,content,date,color};
+
+editIndex=-1;
+
+}
+
+localStorage.setItem("notes",JSON.stringify(notes));
+
+document.getElementById("title").value="";
+document.getElementById("content").value="";
+
+displayNotes();
+
+}
+
+function displayNotes(){
+
+let container=document.getElementById("notes");
+
+container.innerHTML="";
+
+notes.forEach((note,index)=>{
+
+container.innerHTML+=`
+
+<div class="note" style="background:${note.color}">
+
+<h3>${note.title}</h3>
+
+<p>${note.content}</p>
+
+<small>${note.date}</small>
+
+<br><br>
+
+<button onclick="editNote(${index})">Edit</button>
+<button onclick="deleteNote(${index})">Delete</button>
+
+</div>
+
+`;
+
+});
+
+}
+
+function deleteNote(i){
+
+notes.splice(i,1);
+
+localStorage.setItem("notes",JSON.stringify(notes));
+
+displayNotes();
+
+}
+
+function editNote(i){
+
+document.getElementById("title").value=notes[i].title;
+document.getElementById("content").value=notes[i].content;
+
+editIndex=i;
+
+}
+
+function searchNotes(){
+
+let value=document.getElementById("search").value.toLowerCase();
+
+let container=document.getElementById("notes");
+
+container.innerHTML="";
+
+notes.forEach((note,index)=>{
+
+if(note.title.toLowerCase().includes(value)||
+note.content.toLowerCase().includes(value)){
+
+container.innerHTML+=`
+
+<div class="note" style="background:${note.color}">
+
+<h3>${note.title}</h3>
+
+<p>${note.content}</p>
+
+<small>${note.date}</small>
+
+<br><br>
+
+<button onclick="editNote(${index})">Edit</button>
+<button onclick="deleteNote(${index})">Delete</button>
+
+</div>
+
+`;
+
+}
+
+});
+
+}
+
+function toggleDark(){
+
+document.body.classList.toggle("dark");
+
+}
+
+</script>
+
+</body>
+</html>
+```
